@@ -16,8 +16,20 @@ export async function generateQuiz() {
     select: {
       industry: true,
       skills: true,
+      id: true,
     },
   });
+
+  const assessments = await db.assessment.findMany({
+    where: { userId: user.id },
+    select: { questions: true },
+  });
+
+  const allQuestions = assessments.flatMap(
+    (assessment) => assessment.questions
+  );
+
+  console.log(allQuestions);
 
   if (!user) throw new Error("User not found");
 
@@ -27,6 +39,8 @@ export async function generateQuiz() {
     } professional${
     user.skills?.length ? ` with expertise in ${user.skills.join(", ")}` : ""
   }.
+
+  ${assessments} These questions must not be there as it has been asked earlier and increase the level of upcoming questions by taking the level of these provided questions as benchmark.
     
     Each question should be multiple choice with 4 options.
     
@@ -48,6 +62,7 @@ export async function generateQuiz() {
     const response = result.response;
     const text = response.text();
     const cleanedText = text.replace(/```(?:json)?\n?/g, "").trim();
+    console.log(cleanedText);
     const quiz = JSON.parse(cleanedText);
 
     return quiz.questions;
